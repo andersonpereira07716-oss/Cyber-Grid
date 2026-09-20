@@ -174,11 +174,11 @@
 
         function openFreeMode() {
             const term = document.getElementById('terminal-box');
-            term.innerHTML += '<div class="log-entry" style="color: #f59e0b;">> [PAGAMENTO] A redirecionar para o portal de pagamento...</div>';
+            term.innerHTML += '<div class="log-entry" style="color: #f59e0b;">> [MERCADO PAGO] A abrir portal de pagamento PRO...</div>';
             term.scrollTop = term.scrollHeight;
             
-            // Link do Mercado Livre configurado para abrir o checkout/produto
-            const linkPagamento = "https://www.mercadolivre.com.br"; 
+            // COLOQUE O SEU LINK DO MERCADO PAGO ABAIXO ENTRE AS ASPAS:
+            const linkPagamento = "https://link.mercadopago.com.br/seu-link-aqui"; 
             
             setTimeout(() => {
                 window.open(linkPagamento, '_blank');
