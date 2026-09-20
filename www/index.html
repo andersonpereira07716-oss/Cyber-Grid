@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBER-GRID: HACK PUZZLE</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; user-select: none; }
+        body { background-color: #030712; color: #00ffcc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; justify-content: space-between; padding: 12px; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 8px; }
+        h1 { font-size: 0.95rem; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,255,204,0.4); }
+        .score-box { font-size: 0.75rem; background: #0b0f19; border: 1px solid #1a365d; padding: 4px 8px; border-radius: 4px; color: #10b981; }
+        .grid-container {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;
+            background: #0b0f19; border: 2px solid #1a365d; padding: 8px; border-radius: 8px;
+            width: 100%; max-width: 340px; aspect-ratio: 1; margin: 0 auto; box-shadow: 0 0 20px rgba(0,255,204,0.1);
+        }
+        .cell { background: #030508; border: 1px solid #1e293b; border-radius: 3px; }
+        .cell.filled { background: #00ffcc; border-color: #fff; box-shadow: 0 0 8px #00ffcc; }
+        .pieces-dock {
+            display: flex; justify-content: space-around; align-items: center;
+            background: #0b0f19; border: 1px solid #1a365d; padding: 10px; border-radius: 8px; min-height: 90px;
+        }
+        .piece-preview {
+            display: grid; gap: 2px; cursor: pointer; padding: 4px;
+            background: rgba(0,0,0,0.3); border: 1px dashed #334155; border-radius: 4px;
+        }
+        .piece-preview.selected { border-color: #00ffcc; box-shadow: 0 0 10px rgba(0,255,204,0.4); }
+        .p-cell { width: 12px; height: 12px; background: #1e293b; border-radius: 2px; }
+        .p-cell.active { background: #a855f7; box-shadow: 0 0 5px #a855f7; }
+        .controls-info { text-align: center; font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
+        .btn-action {
+            width: 100%; background: #0b0f19; color: #00ffcc; border: 1px solid #00ffcc;
+            padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; letter-spacing: 2px; cursor: pointer; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>CYBER-GRID</h1>
+        <div class="score-box">SCORE: <span id="score">0</span></div>
+    </header>
+    <div class="controls-info" id="status-msg">> Toque numa peça e depois na grade.</div>
+    <div class="grid-container" id="grid"></div>
+    <div class="pieces-dock" id="dock"></div>
+    <button class="btn-action" onclick="initGame()">Reiniciar Firewall</button>
+    <script>
+        const GRID_SIZE = 6;
+        let gridData = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
+        let score = 0, selectedPieceIndex = null, availablePieces = [];
+        const SHAPES = [[[1]], [[1, 1]], [[1, 1, 1]], [[1, 1], [1, 1]], [[1, 0], [1, 1]]];
+
+        function initGame() {
+            gridData = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
+            score = 0; document.getElementById('score').textContent = score;
+            generateNewPieces(); renderGrid();
+        }
+        function generateNewPieces() {
+            availablePieces = [];
+            for (let i = 0; i < 3; i++) availablePieces.push(SHAPES[Math.floor(Math.random() * SHAPES.length)]);
+            selectedPieceIndex = null; renderDock();
+        }
+        function renderGrid() {
+            const gridEl = document.getElementById('grid'); gridEl.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${gridData[r][c] === 1 ? 'filled' : ''}`;
+                    cell.onclick = () => handleCellClick(r, c);
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+        function renderDock() {
+            const dockEl = document.getElementById('dock'); dockEl.innerHTML = '';
+            availablePieces.forEach((piece, index) => {
+                if (!piece) return;
+                const preview = document.createElement('div');
+                preview.className = `piece-preview ${selectedPieceIndex === index ? 'selected' : ''}`;
+                preview.onclick = () => { selectedPieceIndex = index; renderDock(); };
+                preview.style.gridTemplateColumns = `repeat(${piece[0].length}, 1fr)`;
+                piece.forEach(row => row.forEach(val => {
+                    const pCell = document.createElement('div');
+                    pCell.className = `p-cell ${val === 1 ? 'active' : ''}`;
+                    preview.appendChild(pCell);
+                }));
+                dockEl.appendChild(preview);
+            });
+        }
+        function handleCellClick(r, c) {
+            if (selectedPieceIndex === null) return;
+            const piece = availablePieces[selectedPieceIndex];
+            if (r + piece.length <= GRID_SIZE && c + piece[0].length <= GRID_SIZE) {
+                let can = true;
+                piece.forEach((row, dr) => row.forEach((val, dc) => { if (val && gridData[r+dr][c+dc]) can = false; }));
+                if (can) {
+                    piece.forEach((row, dr) => row.forEach((val, dc) => { if (val) gridData[r+dr][c+dc] = 1; }));
+                    availablePieces[selectedPieceIndex] = null;
+                    selectedPieceIndex = null;
+                    score += 100; document.getElementById('score').textContent = score;
+                    renderGrid(); renderDock();
+                    if (availablePieces.every(p => p === null)) generateNewPieces();
+                }
+            }
+        }
+        initGame();
+    </script>
+</body>
+</html>
