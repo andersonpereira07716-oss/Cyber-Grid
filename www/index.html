@@ -174,9 +174,15 @@
 
         function openFreeMode() {
             const term = document.getElementById('terminal-box');
-            term.innerHTML += '<div class="log-entry" style="color: #f59e0b;">> [MODO FREE] Recursos de investigação livre ativados.</div>';
+            term.innerHTML += '<div class="log-entry" style="color: #f59e0b;">> [PAGAMENTO] A redirecionar para o portal de pagamento...</div>';
             term.scrollTop = term.scrollHeight;
-            alert('Modo Free: Acesso total concedido!');
+            
+            // Link do Mercado Livre configurado para abrir o checkout/produto
+            const linkPagamento = "https://www.mercadolivre.com.br"; 
+            
+            setTimeout(() => {
+                window.open(linkPagamento, '_blank');
+            }, 800);
         }
     </script>
 </body>
