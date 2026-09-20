@@ -3,107 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CYBER-GRID: HACK PUZZLE</title>
+    <title>CYBER-DETECTIVE v4.0</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; user-select: none; }
-        body { background-color: #030712; color: #00ffcc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; justify-content: space-between; padding: 12px; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 8px; }
-        h1 { font-size: 0.95rem; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,255,204,0.4); }
-        .score-box { font-size: 0.75rem; background: #0b0f19; border: 1px solid #1a365d; padding: 4px 8px; border-radius: 4px; color: #10b981; }
-        .grid-container {
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;
-            background: #0b0f19; border: 2px solid #1a365d; padding: 8px; border-radius: 8px;
-            width: 100%; max-width: 340px; aspect-ratio: 1; margin: 0 auto; box-shadow: 0 0 20px rgba(0,255,204,0.1);
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+        body { background-color: #05070c; color: #00ffcc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0b0f19 0%, #030712 100%);
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            padding: 24px; z-index: 100; transition: opacity 0.6s ease;
         }
-        .cell { background: #030508; border: 1px solid #1e293b; border-radius: 3px; }
-        .cell.filled { background: #00ffcc; border-color: #fff; box-shadow: 0 0 8px #00ffcc; }
-        .pieces-dock {
-            display: flex; justify-content: space-around; align-items: center;
-            background: #0b0f19; border: 1px solid #1a365d; padding: 10px; border-radius: 8px; min-height: 90px;
+        .splash-header { text-align: center; margin-top: 15px; }
+        .splash-header h1 { font-size: 1.4rem; letter-spacing: 3px; color: #fff; text-shadow: 0 0 15px rgba(0,255,204,0.5); }
+        .splash-header p { font-size: 0.7rem; color: #dc2626; letter-spacing: 5px; margin-top: 6px; text-transform: uppercase; }
+
+        .splash-center {
+            text-align: center; color: #94a3b8; font-size: 0.8rem; border: 1px dashed #1e293b;
+            padding: 20px; border-radius: 8px; background: rgba(5,7,12,0.8); width: 100%; max-width: 300px;
+            box-shadow: inset 0 0 15px rgba(0,255,204,0.05);
         }
-        .piece-preview {
-            display: grid; gap: 2px; cursor: pointer; padding: 4px;
-            background: rgba(0,0,0,0.3); border: 1px dashed #334155; border-radius: 4px;
+        .splash-footer { width: 100%; max-width: 320px; margin-bottom: 20px; }
+        .progress-box { background: #0b0f19; border: 1px solid #1a365d; padding: 12px; border-radius: 8px; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 0.7rem; color: #00ffcc; margin-bottom: 8px; }
+        .progress-bar-bg { background: #020617; height: 8px; border-radius: 4px; overflow: hidden; border: 1px solid #1e293b; }
+        .progress-bar-fill { background: #00ffcc; height: 100%; width: 0%; transition: width 0.2s; box-shadow: 0 0 10px #00ffcc; }
+
+        .btn-start {
+            display: none; width: 100%; background: #0b0f19; color: #00ffcc; border: 2px solid #00ffcc;
+            padding: 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; letter-spacing: 3px;
+            cursor: pointer; text-transform: uppercase; box-shadow: 0 0 20px rgba(0,255,204,0.3);
+            animation: pulseBtn 1.5s infinite;
         }
-        .piece-preview.selected { border-color: #00ffcc; box-shadow: 0 0 10px rgba(0,255,204,0.4); }
-        .p-cell { width: 12px; height: 12px; background: #1e293b; border-radius: 2px; }
-        .p-cell.active { background: #a855f7; box-shadow: 0 0 5px #a855f7; }
-        .controls-info { text-align: center; font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-        .btn-action {
-            width: 100%; background: #0b0f19; color: #00ffcc; border: 1px solid #00ffcc;
-            padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; letter-spacing: 2px; cursor: pointer; text-transform: uppercase;
+        @keyframes pulseBtn {
+            0% { transform: scale(1); box-shadow: 0 0 15px rgba(0,255,204,0.3); }
+            50% { transform: scale(1.02); box-shadow: 0 0 25px rgba(0,255,204,0.6); }
+            100% { transform: scale(1); box-shadow: 0 0 15px rgba(0,255,204,0.3); }
         }
+
+        /* Jogo Principal */
+        #game-content { display: none; flex-direction: column; height: 100vh; padding: 12px; }
+        header { border-bottom: 2px solid #00ffcc; padding-bottom: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 1.1rem; letter-spacing: 2px; text-shadow: 0 0 8px rgba(0,255,204,0.4); }
+        .top-nav { display: flex; gap: 6px; }
+        .nav-btn { background: transparent; color: #00ffcc; border: 1px solid #00ffcc; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
+
+        .stats-bar { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 8px; color: #94a3b8; background: #0b0f19; padding: 6px 10px; border-radius: 6px; border: 1px solid #1a365d; }
+
+        #terminal-box {
+            flex: 1; background: #030508; border: 1px solid #1a365d; border-radius: 6px; padding: 12px;
+            overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+        }
+        .log-entry { line-height: 1.5; }
+        .system-msg { color: #3b82f6; }
+        .success-msg { color: #10b981; }
+        .prompt-msg { color: #00ffcc; }
+
+        .actions-panel { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button.action-btn { background: #0b0f19; color: #00ffcc; border: 1px solid #00ffcc; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.7rem; box-shadow: 0 0 10px rgba(0,255,204,0.15); }
+        button.action-btn:active { background: #1a365d; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>CYBER-GRID</h1>
-        <div class="score-box">SCORE: <span id="score">0</span></div>
-    </header>
-    <div class="controls-info" id="status-msg">> Toque numa peça e depois na grade.</div>
-    <div class="grid-container" id="grid"></div>
-    <div class="pieces-dock" id="dock"></div>
-    <button class="btn-action" onclick="initGame()">Reiniciar Firewall</button>
-    <script>
-        const GRID_SIZE = 6;
-        let gridData = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
-        let score = 0, selectedPieceIndex = null, availablePieces = [];
-        const SHAPES = [[[1]], [[1, 1]], [[1, 1, 1]], [[1, 1], [1, 1]], [[1, 0], [1, 1]]];
 
-        function initGame() {
-            gridData = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
-            score = 0; document.getElementById('score').textContent = score;
-            generateNewPieces(); renderGrid();
-        }
-        function generateNewPieces() {
-            availablePieces = [];
-            for (let i = 0; i < 3; i++) availablePieces.push(SHAPES[Math.floor(Math.random() * SHAPES.length)]);
-            selectedPieceIndex = null; renderDock();
-        }
-        function renderGrid() {
-            const gridEl = document.getElementById('grid'); gridEl.innerHTML = '';
-            for (let r = 0; r < GRID_SIZE; r++) {
-                for (let c = 0; c < GRID_SIZE; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = `cell ${gridData[r][c] === 1 ? 'filled' : ''}`;
-                    cell.onclick = () => handleCellClick(r, c);
-                    gridEl.appendChild(cell);
-                }
+    <div id="splash-screen">
+        <div class="splash-header">
+            <h1>SHADOWS OF EVIDENCE</h1>
+            <p>criminal investigation RPG</p>
+        </div>
+
+        <div class="splash-center">
+            <p>> A carregar base forense...</p>
+            <p style="margin-top: 6px; color: #64748b; font-size: 0.7rem;">Sistemas cibernéticos blindados.</p>
+        </div>
+
+        <div class="splash-footer">
+            <div id="loading-container" class="progress-box">
+                <div class="progress-info">
+                    <span>SINCRONIZANDO CASOS</span>
+                    <span id="load-percent">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progress-fill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+            <button id="btn-tap" class="btn-start" onclick="startGame()">TAP TO CONTINUE</button>
+        </div>
+    </div>
+
+    <div id="game-content">
+        <header>
+            <h1>CYBER-DETECTIVE</h1>
+            <div class="top-nav">
+                <button class="nav-btn" onclick="openProfile()">PERFIL</button>
+                <button class="nav-btn" onclick="toggleColor()">COR</button>
+                <button class="nav-btn" style="background: rgba(0,255,204,0.2);" onclick="openFreeMode()">FREE</button>
+            </div>
+        </header>
+
+        <div class="stats-bar">
+            <div>CASO: <span id="case-name">O Arquiteto</span></div>
+            <div>PISTAS: <span id="clues-count">0</span>/3</div>
+            <div>NÍVEL: 1</div>
+        </div>
+
+        <div id="terminal-box">
+            <div class="log-entry system-msg">[SYSTEM] Terminal v4.0 Ativado com Som/Glitch FX.</div>
+            <div class="log-entry prompt-msg">> Missão 1: Iniciar investigação forense nos servidores corporativos.</div>
+        </div>
+
+        <div class="actions-panel">
+            <button class="action-btn" onclick="investigate()">Analisar Logs</button>
+            <button class="action-btn" onclick="hackSystem()">Invadir Firewall</button>
+            <button class="action-btn" onclick="decodeClue()" style="opacity: 0.6;">Descodificar Pista</button>
+            <button class="action-btn" onclick="nextCase()" style="opacity: 0.6;">Próximo Caso</button>
+        </div>
+    </div>
+
+    <script>
+        let progress = 0;
+        const fill = document.getElementById('progress-fill');
+        const percent = document.getElementById('load-percent');
+        const loadingContainer = document.getElementById('loading-container');
+        const btnTap = document.getElementById('btn-tap');
+
+        const loadInterval = setInterval(() => {
+            progress += Math.floor(Math.random() * 25) + 10;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loadInterval);
+                loadingContainer.style.display = 'none';
+                btnTap.style.display = 'block';
             }
+            fill.style.width = progress + '%';
+            percent.textContent = progress + '%';
+        }, 180);
+
+        function startGame() {
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                document.getElementById('game-content').style.display = 'flex';
+            }, 600);
         }
-        function renderDock() {
-            const dockEl = document.getElementById('dock'); dockEl.innerHTML = '';
-            availablePieces.forEach((piece, index) => {
-                if (!piece) return;
-                const preview = document.createElement('div');
-                preview.className = `piece-preview ${selectedPieceIndex === index ? 'selected' : ''}`;
-                preview.onclick = () => { selectedPieceIndex = index; renderDock(); };
-                preview.style.gridTemplateColumns = `repeat(${piece[0].length}, 1fr)`;
-                piece.forEach(row => row.forEach(val => {
-                    const pCell = document.createElement('div');
-                    pCell.className = `p-cell ${val === 1 ? 'active' : ''}`;
-                    preview.appendChild(pCell);
-                }));
-                dockEl.appendChild(preview);
-            });
+
+        function investigate() {
+            const term = document.getElementById('terminal-box');
+            term.innerHTML += '<div class="log-entry success-msg">> [PISTA] Registo de acesso suspeito detetado no setor 7.</div>';
+            term.scrollTop = term.scrollHeight;
+            document.getElementById('clues-count').textContent = '1';
         }
-        function handleCellClick(r, c) {
-            if (selectedPieceIndex === null) return;
-            const piece = availablePieces[selectedPieceIndex];
-            if (r + piece.length <= GRID_SIZE && c + piece[0].length <= GRID_SIZE) {
-                let can = true;
-                piece.forEach((row, dr) => row.forEach((val, dc) => { if (val && gridData[r+dr][c+dc]) can = false; }));
-                if (can) {
-                    piece.forEach((row, dr) => row.forEach((val, dc) => { if (val) gridData[r+dr][c+dc] = 1; }));
-                    availablePieces[selectedPieceIndex] = null;
-                    selectedPieceIndex = null;
-                    score += 100; document.getElementById('score').textContent = score;
-                    renderGrid(); renderDock();
-                    if (availablePieces.every(p => p === null)) generateNewPieces();
-                }
-            }
+
+        function hackSystem() {
+            const term = document.getElementById('terminal-box');
+            term.innerHTML += '<div class="log-entry system-msg">> [FIREWALL] Acesso root concedido com sucesso ao terminal remoto.</div>';
+            term.scrollTop = term.scrollHeight;
+            document.getElementById('clues-count').textContent = '2';
         }
-        initGame();
+
+        function openProfile() {
+            alert('Perfil de Investigador: Nível 1 - Acesso Liberado.');
+        }
+
+        function toggleColor() {
+            alert('Modo de alta visibilidade ativado.');
+        }
+
+        function openFreeMode() {
+            const term = document.getElementById('terminal-box');
+            term.innerHTML += '<div class="log-entry" style="color: #f59e0b;">> [MODO FREE] Recursos de investigação livre ativados.</div>';
+            term.scrollTop = term.scrollHeight;
+            alert('Modo Free: Acesso total concedido!');
+        }
     </script>
 </body>
 </html>
